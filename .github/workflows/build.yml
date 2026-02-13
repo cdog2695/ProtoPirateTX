@@ -1,32 +1,33 @@
-name: Build ProtoPirate (Flipper)
+name: Build ProtoPirate TX FAP
 
 on:
   workflow_dispatch:
-  push:
-    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Checkout ProtoPirate
+        uses: actions/checkout@v4
         with:
-          python-version: '3.10'
+          path: protopirate
 
-      - name: Install ufbt
-        run: pip install ufbt
+      - name: Clone Flipper Firmware
+        run: git clone https://github.com/flipperdevices/flipperzero-firmware.git
 
-      - name: Build the Flipper app
-        run: ufbt
+      - name: Move ProtoPirate into firmware
+        run: |
+          mkdir -p flipperzero-firmware/applications_user/protopirate
+          cp -r protopirate/* flipperzero-firmware/applications_user/protopirate/
 
-      - name: Upload .fap artifact
+      - name: Build firmware (includes ProtoPirate)
+        run: |
+          cd flipperzero-firmware
+          ./fbt fap_protopirate
+
+      - name: Upload FAP
         uses: actions/upload-artifact@v4
         with:
           name: ProtoPirateTX-fap
-          path: |
-            dist/**/*.fap
+          path: flipperzero-firmware/build/fap_protopirate/*.fap
